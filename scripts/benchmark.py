@@ -199,16 +199,16 @@ def run_timesfm(full_close, test_start_idx, test_len, ctx_len, pred_len, device)
 
 
 def run_tirex(full_close, test_start_idx, test_len, ctx_len, pred_len, device):
-    from tirex import TiRexPipeline
-    model = TiRexPipeline.from_pretrained('NX-AI/TiRex', device_map=device)
+    from tirex import load_model
+    model = load_model('NX-AI/TiRex')
     preds = []
     for i in tqdm(range(test_len), desc='TiRex'):
         ctx = torch.tensor(
             full_close[test_start_idx + i - ctx_len : test_start_idx + i],
             dtype=torch.float32,
-        )
-        forecast = model.predict(ctx.unsqueeze(0), prediction_length=pred_len)
-        preds.append(forecast.median(dim=1).squeeze().item())
+        ).unsqueeze(0)  # shape: (1, ctx_len)
+        quantiles, mean = model.forecast(context=ctx, prediction_length=pred_len)
+        preds.append(mean.squeeze().item())
     return np.array(preds)
 
 
