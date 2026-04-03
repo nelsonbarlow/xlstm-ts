@@ -162,7 +162,7 @@ def run_chronos(full_close, test_start_idx, test_len, ctx_len, pred_len, device)
     model = ChronosPipeline.from_pretrained(
         'amazon/chronos-t5-base',
         device_map=device,
-        torch_dtype=torch.float32,
+        dtype=torch.float32,
     )
     preds = []
     for i in tqdm(range(test_len), desc='Chronos-2'):
@@ -171,7 +171,9 @@ def run_chronos(full_close, test_start_idx, test_len, ctx_len, pred_len, device)
             dtype=torch.float32,
         )
         forecast = model.predict(ctx.unsqueeze(0), prediction_length=pred_len)
-        preds.append(forecast.median(dim=1).squeeze().item())
+        # forecast shape: (1, num_samples, pred_len) — take median across samples
+        median_val = forecast[:, :, 0].median(dim=1).values.squeeze().item()
+        preds.append(median_val)
     return np.array(preds)
 
 
@@ -213,23 +215,21 @@ def run_tirex(full_close, test_start_idx, test_len, ctx_len, pred_len, device):
 
 
 def run_moirai(full_close, test_start_idx, test_len, ctx_len, pred_len, device):
-    from uni2ts.model.moirai import MoiraiModule
-    from gluonts.dataset.pandas import PandasDataset
-    module = MoiraiModule.from_pretrained('Salesforce/moirai-2.0-R-small')
-    predictor = module.create_predictor(
+    from uni2ts.model.moirai2 import Moirai2Forecast, Moirai2Module
+    model = Moirai2Forecast(
+        module=Moirai2Module.from_pretrained('Salesforce/moirai-2.0-R-small'),
         prediction_length=pred_len,
         context_length=ctx_len,
-        num_samples=20,
+        target_dim=1,
+        feat_dynamic_real_dim=0,
+        past_feat_dynamic_real_dim=0,
     )
     preds = []
     for i in tqdm(range(test_len), desc='Moirai 2.0'):
         ctx_vals = full_close[test_start_idx + i - ctx_len : test_start_idx + i]
-        ctx_df = pd.DataFrame({'target': ctx_vals}, index=pd.RangeIndex(len(ctx_vals)))
-        ds = PandasDataset.from_long_dataframe(
-            ctx_df.reset_index(), target='target', item_id='index',
-        )
-        forecasts = list(predictor.predict(ds))
-        preds.append(np.median(forecasts[0].samples[:, 0]))
+        # predict returns (batch, num_quantiles, pred_len) — index 4 = median (0.5)
+        forecast = model.predict([ctx_vals])
+        preds.append(forecast[0, 4, 0])
     return np.array(preds)
 
 
