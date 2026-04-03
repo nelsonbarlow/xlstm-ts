@@ -42,7 +42,7 @@ STOCK = 'S&P 500'
 TRAIN_END_DATE = '2021-01-01'
 VAL_END_DATE = '2022-07-01'
 
-AVAILABLE_MODELS = ['chronos', 'timesfm', 'tirex', 'moirai']
+AVAILABLE_MODELS = ['chronos', 'tirex', 'moirai', 'timesfm']  # timesfm requires Python <3.12
 
 # ---------------------------------------------------------------------------
 # Metrics (same as paper: src/ml/models/shared/metrics.py +
@@ -320,8 +320,10 @@ def save_chart(fm_df, orig_df, den_df, output_path):
 # ---------------------------------------------------------------------------
 def main():
     parser = argparse.ArgumentParser(description='Foundation model benchmark for S&P 500 daily')
-    parser.add_argument('--models', nargs='+', choices=AVAILABLE_MODELS, default=AVAILABLE_MODELS,
-                        help='Which models to run (default: all)')
+    default_models = ['chronos', 'tirex', 'moirai']
+    parser.add_argument('--models', nargs='+', choices=AVAILABLE_MODELS, default=default_models,
+                        help='Which models to run (default: chronos tirex moirai). '
+                             'timesfm available but requires Python <3.12')
     parser.add_argument('--context-length', type=int, default=150,
                         help='Context window size (default: 150, same as xLSTM-TS)')
     parser.add_argument('--device', type=str, default=None,

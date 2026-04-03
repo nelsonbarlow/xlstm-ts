@@ -1,0 +1,17 @@
+# Foundation model benchmark dependencies
+# Requires Python >=3.12
+
+# Core
+pandas
+numpy
+scikit-learn
+matplotlib
+seaborn
+tqdm
+torch
+einops
+
+# Models
+chronos-forecasting
+tirex-ts
+uni2ts

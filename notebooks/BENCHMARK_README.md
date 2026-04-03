@@ -16,31 +16,33 @@ We replicated the paper's notebook and found:
 
 ## Models tested
 
-| Model | Org | Params | Architecture | Why included |
-|-------|-----|--------|-------------|-------------|
-| Chronos-2 | Amazon | 120M | Encoder-only Transformer | Current GIFT-Eval benchmark leader |
-| TimesFM 2.5 | Google | 200M | Decoder-only Transformer | Strong zero-shot, BigQuery integration |
-| TiRex | NX-AI | 35M | xLSTM-based | Direct successor to xLSTM, NeurIPS 2025 |
-| Moirai 2.0 | Salesforce | 11M | Decoder-only Transformer | Smallest competitive model |
+| Model | Org | Params | Architecture | Python 3.12 | Why included |
+|-------|-----|--------|-------------|-------------|--------------|
+| Chronos-2 | Amazon | 120M | Encoder-only Transformer | Yes | Current GIFT-Eval benchmark leader |
+| TiRex | NX-AI | 35M | xLSTM-based | Yes | Direct successor to xLSTM, NeurIPS 2025 |
+| Moirai 2.0 | Salesforce | 11M | Decoder-only Transformer | Yes | Smallest competitive model |
+| TimesFM 2.5 | Google | 200M | Decoder-only Transformer | **No (<3.12)** | Strong zero-shot (skipped by default) |
 
 ## How to run
 
 **Hardware:** Mac Mini M4 24GB is more than sufficient. All models fit comfortably.
 
-### Python script (recommended)
+### Setup
 
 ```bash
-# Install dependencies
-pip install pandas numpy scikit-learn matplotlib seaborn tqdm torch
-pip install chronos-forecasting    # Chronos-2
-pip install timesfm                # TimesFM 2.5
-pip install tirex-forecasting      # TiRex
-pip install uni2ts einops          # Moirai 2.0
+cd xlstm-ts
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-benchmark.txt
+```
 
-# Run all models
+### Run
+
+```bash
+# Run all compatible models (Chronos-2, TiRex, Moirai 2.0)
 python scripts/benchmark.py
 
-# Run specific models only
+# Run specific models
 python scripts/benchmark.py --models chronos tirex
 
 # Custom context window
@@ -75,11 +77,11 @@ Uses the same `data/datasets/sp500_daily.csv` from the original repo. Same date 
 
 ## Known issues
 
-- Some model APIs may change -- check the respective GitHub repos for latest usage if imports fail
-- Moirai 2.0 may need `gluonts` as an additional dependency
-- TiRex import path may differ depending on version -- check https://huggingface.co/NX-AI/TiRex
-- MPS (Apple Silicon) support varies by model -- fall back to CPU if you get MPS errors
+- **TimesFM** requires Python <3.12 -- excluded from `requirements-benchmark.txt`. If you need it, use a Python 3.11 venv.
+- MPS (Apple Silicon) support varies by model -- use `--device cpu` as fallback
+- Moirai 2.0 pulls in `gluonts` as a transitive dependency via `uni2ts`
+- Model APIs evolve quickly -- check HuggingFace model cards if imports fail
 
 ## Context for Claude Code
 
-If you're picking this up in a new session: the user is investigating whether pre-trained time series foundation models can match or beat a custom xLSTM-TS model that was trained specifically on this S&P 500 data. The key metric is **directional prediction accuracy** (predicting whether tomorrow's close is higher or lower than today's). The bar to beat is ~65% from the paper's own reproducible results. The notebook may need API adjustments as foundation model libraries evolve quickly.
+If you're picking this up in a new session: the user is investigating whether pre-trained time series foundation models can match or beat a custom xLSTM-TS model that was trained specifically on this S&P 500 data. The key metric is **directional prediction accuracy** (predicting whether tomorrow's close is higher or lower than today's). The bar to beat is ~65% from the paper's own reproducible results. The script may need API adjustments as foundation model libraries evolve quickly.
