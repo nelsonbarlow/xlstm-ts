@@ -27,21 +27,36 @@ We replicated the paper's notebook and found:
 
 **Hardware:** Mac Mini M4 24GB is more than sufficient. All models fit comfortably.
 
-```bash
-cd notebooks
-jupyter notebook foundation_model_benchmark.ipynb
-```
-
-Run cells top-to-bottom. Each model section is independent -- if one fails to install, comment it out and run the others.
-
-### Install dependencies
+### Python script (recommended)
 
 ```bash
+# Install dependencies
 pip install pandas numpy scikit-learn matplotlib seaborn tqdm torch
 pip install chronos-forecasting    # Chronos-2
 pip install timesfm                # TimesFM 2.5
 pip install tirex-forecasting      # TiRex
 pip install uni2ts einops          # Moirai 2.0
+
+# Run all models
+python scripts/benchmark.py
+
+# Run specific models only
+python scripts/benchmark.py --models chronos tirex
+
+# Custom context window
+python scripts/benchmark.py --context-length 200
+
+# Force CPU if MPS causes issues
+python scripts/benchmark.py --device cpu
+```
+
+Results are saved to `results/foundation_model_results.csv` and `results/benchmark_chart.png`.
+
+### Jupyter notebook (alternative)
+
+```bash
+cd notebooks
+jupyter notebook foundation_model_benchmark.ipynb
 ```
 
 ## Data
