@@ -170,8 +170,9 @@ def run_chronos(full_close, test_start_idx, test_len, ctx_len, pred_len, device)
             full_close[test_start_idx + i - ctx_len : test_start_idx + i],
             dtype=torch.float32,
         )
-        forecasts = model.predict(ctx.unsqueeze(0), prediction_length=pred_len)
-        # Chronos-2 returns list[Tensor] of shape (n_variates, n_quantiles, pred_len)
+        # Chronos-2 expects (n_series, n_variates, history_length)
+        forecasts = model.predict(ctx.reshape(1, 1, -1), prediction_length=pred_len)
+        # Returns list[Tensor] of shape (n_variates, n_quantiles, pred_len)
         f = forecasts[0]
         median_idx = f.shape[1] // 2
         preds.append(f[0, median_idx, 0].item())

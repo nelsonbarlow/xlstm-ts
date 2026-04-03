@@ -109,7 +109,8 @@ def rolling_predict(pipeline, full_close, test_start_idx, test_len, ctx_len, des
             full_close[test_start_idx + i - ctx_len : test_start_idx + i],
             dtype=torch.float32,
         )
-        forecasts = pipeline.predict(ctx.unsqueeze(0), prediction_length=1)
+        # Chronos-2 expects (n_series, n_variates, history_length)
+        forecasts = pipeline.predict(ctx.reshape(1, 1, -1), prediction_length=1)
         # Chronos-2 predict returns list[Tensor] of shape (n_variates, n_quantiles, pred_len)
         # Middle quantile index = median
         f = forecasts[0]
