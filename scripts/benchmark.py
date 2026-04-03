@@ -158,9 +158,9 @@ PAPER_DENOISED = {
 # Model runners
 # ---------------------------------------------------------------------------
 def run_chronos(full_close, test_start_idx, test_len, ctx_len, pred_len, device):
-    from chronos import ChronosPipeline
-    model = ChronosPipeline.from_pretrained(
-        'amazon/chronos-t5-base',
+    from chronos import BaseChronosPipeline
+    model = BaseChronosPipeline.from_pretrained(
+        'amazon/chronos-2',
         device_map=device,
         dtype=torch.float32,
     )
@@ -170,10 +170,11 @@ def run_chronos(full_close, test_start_idx, test_len, ctx_len, pred_len, device)
             full_close[test_start_idx + i - ctx_len : test_start_idx + i],
             dtype=torch.float32,
         )
-        forecast = model.predict(ctx.unsqueeze(0), prediction_length=pred_len)
-        # forecast shape: (1, num_samples, pred_len) — take median across samples
-        median_val = forecast[:, :, 0].median(dim=1).values.squeeze().item()
-        preds.append(median_val)
+        forecasts = model.predict(ctx.unsqueeze(0), prediction_length=pred_len)
+        # Chronos-2 returns list[Tensor] of shape (n_variates, n_quantiles, pred_len)
+        f = forecasts[0]
+        median_idx = f.shape[1] // 2
+        preds.append(f[0, median_idx, 0].item())
     return np.array(preds)
 
 

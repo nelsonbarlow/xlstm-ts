@@ -122,8 +122,8 @@ def rolling_predict(pipeline, full_close, test_start_idx, test_len, ctx_len, des
 # ---------------------------------------------------------------------------
 def main():
     parser = argparse.ArgumentParser(description='Fine-tune Chronos-2 on denoised S&P 500')
-    parser.add_argument('--model', type=str, default='amazon/chronos-t5-small',
-                        help='Chronos-2 model ID (default: amazon/chronos-t5-small)')
+    parser.add_argument('--model', type=str, default='amazon/chronos-2',
+                        help='Chronos-2 model ID (default: amazon/chronos-2)')
     parser.add_argument('--context-length', type=int, default=150,
                         help='Context window (default: 150, same as xLSTM-TS)')
     parser.add_argument('--num-steps', type=int, default=1000,
